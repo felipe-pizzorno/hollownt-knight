@@ -22,6 +22,7 @@ public class PlayerMovement : MonoBehaviour {
     private float m_JumpStart = 0;	
     private Rigidbody2D m_Rigidbody2D;
     private Animator m_Animator;
+    private Vector3 m_Force = new Vector3(0, 0, 0);
 
     // Start is called before the first frame update
     void Awake() {
@@ -34,10 +35,12 @@ public class PlayerMovement : MonoBehaviour {
 
     void Update() {
       setAnimationState();
-      if(m_IsGrounded) {
-        m_Jump = m_Jump || Input.GetKeyDown(KeyCode.Z);
+      if(m_IsGrounded && Input.GetKeyDown(KeyCode.Z)) {
+        m_Jump = true;
       }
-      m_FinishJump = m_FinishJump || Input.GetKeyUp(KeyCode.Z);
+      if(Input.GetKeyUp(KeyCode.Z)) {
+        m_FinishJump = true;
+      }
       m_MovingLeft = Input.GetKey(KeyCode.LeftArrow);
       m_MovingRight = Input.GetKey(KeyCode.RightArrow);
     }
@@ -46,6 +49,13 @@ public class PlayerMovement : MonoBehaviour {
       checkAndUpdateIsGrounded();
       handleJump();
       move();
+      float timeElapsed = Time.fixedDeltaTime;
+      if (m_ForceTimer >= m_ForceTimerMax) {
+        m_Force = new Vector3(0, 0, 0);
+      } else {
+        m_ForceTimer += timeElapsed;
+      }
+      m_Rigidbody2D.AddForce(m_Force * timeElapsed);
     }
 
     void setAnimationState() {
@@ -129,5 +139,15 @@ public class PlayerMovement : MonoBehaviour {
           m_IsGrounded = true;
         }
       }
+    }
+
+    public bool getIsGrounded() {
+      return m_IsGrounded;
+    }
+
+    public void hit(Vector3 knockback) {
+      m_FinishJump = true;
+      m_Force = knockback;
+      m_ForceTimer = 0;
     }
 }
